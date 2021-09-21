@@ -18,15 +18,12 @@ class TravelingSalesman:
         self.crossoverProb = crossprob
 
         self.createCities()
-        print(self.cities)
         
         for i in range(QntPopulacao): # pra cada individuo da população
             self.population.append( self.createElement() ) # população inicial
-        print(self.population)
 
         self.createDistanceMatrix()
 
-        print(self.distanceMatrix)
 
     # Função que cria a matriz de distancia das cidades
     def createDistanceMatrix(self):
@@ -75,68 +72,129 @@ class TravelingSalesman:
 
         return self.createElement(),self.createElement()
 
-    def pmx_cx(self, el1, el2, a, b):
+    def pmx_cx(self, p1, p2, a, b):
 
-        numCities = len(el1)
+        f1, f2 = [0]*self.numberOfCities, [0]*self.numberOfCities
+
+        for i in range(len(p1)):
+            f1[i] = p1[i]
+        for i in range(len(p2)):
+            f2[i] = p2[i]
+
+        numCities = len(f1)
         idx1 = [0] * numCities
         idx2 = [0] * numCities
 
-        for i, x in enumerate(el1):
+        for i, x in enumerate(f1):
             idx1[x] = i
-        for i, x in enumerate(el2):
+        for i, x in enumerate(f2):
             idx2[x] = i
 
         for i in range(a, b+1) :
-            el1[i], el2[i] = el2[i], el1[i]
+            f1[i], f2[i] = f2[i], f1[i]
 
         irange = list(range(0,a)) + list(range(b+1, numCities))
 
         for i in irange:
-            x = el1[i]
+            x = f1[i]
             while idx2[x] >=a and idx2[x] <= b :
-                x = el2[idx2[x]]
-            el1[i] = x
+                x = f2[idx2[x]]
+            f1[i] = x
 
-            x = el2[i]
+            x = f2[i]
             while idx1[x] >= a and idx1[x] <= b:
-                x = el1[idx1[x]]
-            el2[i] = x
+                x = f1[idx1[x]]
+            f2[i] = x
 
-        return el1, el2
+        return f1, f2
 
     # FUnção principal do programa
     def main(self):
         self.simulate()
         self.plotCities(self.population[0])
 
+    def roullete(self):
+        p1,p2 = random.randint(0,self.populationSize-1),random.randint(0,self.populationSize-1)
+        while(p1 == p2):
+            p1,p2 = random.randint(0,self.populationSize-1),random.randint(0,self.populationSize-1)
+        return self.population[p1],self.population[p2]
+        
+    def mutate(self,elem):
+
+        x = random.uniform(0, 1)
+            
+        if(x<=self.mutationProb):
+            a = random.randint(0,self.numberOfCities-1)
+            b = random.randint(0,self.numberOfCities-1)
+
+            while(a==b):
+                b = random.randint(0,self.numberOfCities-1)
+                
+            aux = elem[a]
+            elem[a] = elem[b]
+            elem[b] = aux
+
+
     # Simula a evolução , ou seja, o passar das épocas com a evolução da população
     def simulate(self):
 
-        for i  in range(self.epochs):
-            print(f'Epoch {i}')
+        for epoch  in range(self.epochs):
+            print(f'Epoch {epoch}')
+            # print("População inicial da epoca")
+            # print(self.population)
             filhos = []
+            
             for j in range(int((self.crossoverProb*self.populationSize)/2)):
-                f1,f2 = self.pmx_cx(1, 2, 3, 5) # escolher os pais para cruzamento (roleta?)
+                p1,p2 = self.roullete()
+                # print("Pais")
+                # print(p1,p2)
+                f1,f2 = self.pmx_cx(p1, p2, 3, 5) # escolher os pais para cruzamento (roleta?)
+                # f1,f2 = self.normalCross(p1, p2) # escolher os pais para cruzamento (roleta?)
+                # print(p1,p2)
+                
+                self.mutate(f1)
+                self.mutate(f2)
+
                 filhos.append(f1)
                 filhos.append(f2)
+            
             for f in filhos:
                 self.population.append(f)
-            self.population.sort(key=ts.evaluateElement)
-            self.population = self.population[:self.populationSize]
+            # print("População junto com filhos")
+            print(self.population)
+            for i in range(len(self.population)):
+                print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
+            
+            self.population.sort(key=self.evaluateElement)
+            print(self.population)
 
+            while(len(self.population)>self.populationSize):
+                self.population.pop()
+            
+            for i in range(len(self.population)):
+                print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
+            # if epoch == 1:
+            #     break
 
+# params: qntCidades, QntPopulacao, epochs, mutprob, crossprob
+ts = TravelingSalesman(8, 30, 10, 0.1, 0.8)
+# print(ts.population)
+# for i in range(4):
+#     p1,p2 = ts.roullete()
+#     print("pai 1 = ", p1)
+#     print("pai 2 = ", p2)
+    
 
-ts = TravelingSalesman(7, 5, 20, 0.2, 0.8)
 ts.main()
 
-print('------testing cross over------')
-s1 = ts.population[0]
-s2 = ts.population[1]
-print('s1, s2 before cross over')
-print(s1, s2)
-s1,s2 = ts.pmx_cx(s1, s2, 3, 5)
-print('s1, s2 after cross over')
-print(s1, s2)
+# print('------testing cross over------')
+# s1 = ts.population[0]
+# s2 = ts.population[1]
+# print('s1, s2 before cross over')
+# print(s1, s2)
+# s1,s2 = ts.pmx_cx(s1, s2, 3, 5)
+# print('s1, s2 after cross over')
+# print(s1, s2)
 
 
 ### Arrumar a matriz de distancias a ser utilizada, usar proababilidade de cross, gerar os filhos para depois selecionar os melhores, criar os 4 tipos de cross, finalizar a simulação das epocas e da evolução
