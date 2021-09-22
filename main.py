@@ -205,6 +205,72 @@ class TravelingSalesman:
 
         return f1, f2
 
+    def indexOf(self, arr, x):
+        for a in range(0,arr.__len__()):
+            if arr[a] == x:
+                return a
+        return -1
+
+    def findUnusedIndexValues(self, p, f):
+        res = list()
+        for a in p:
+            if self.indexOf(f,a) == -1:
+                res.append(a)
+        return res
+
+    def cycle2_cx(self, p1, p2):
+
+        p1_cpy = [None] * p1.__len__()
+        p2_cpy = [None] * p2.__len__()
+
+        for i in range(len(p1)):
+            p1_cpy[i] = p1[i]
+        for i in range(len(p2)):
+            p2_cpy[i] = p2[i]
+
+
+        print('hellol shakoob')
+        f1 = [None] * p1_cpy.__len__()
+        f2 = [None] * p2_cpy.__len__()
+        i1 = 0
+        i2 = 0
+        initial = p1_cpy[0]
+        f1[i1] = p2_cpy[0]
+        i1 += 1
+        # latestUpdated2 = p2_cpy[0]
+        check = 1
+
+        while i1 < p1_cpy.__len__() and i2 < p2_cpy.__len__():
+            index1 = self.indexOf(p1_cpy,f1[i1-1])
+            index1 = self.indexOf(p1_cpy,p2_cpy[index1])
+            latestUpdated2 = p2_cpy[index1]
+            if latestUpdated2 == initial:
+                f2[i2] = latestUpdated2
+                i2 += 1
+                # print("cycle detected")
+                check = 0
+                res1 = self.findUnusedIndexValues(p1_cpy,f1)
+                res2 = self.findUnusedIndexValues(p2_cpy,f2)
+                # print(res1,res2)
+                ans1,ans2 = self.cycle2_cx(res1, res2)
+                f1[i1:] = ans1
+                f2[i2:] = ans2
+                check = 0
+                break
+            else:
+                f2[i2] = p2_cpy[index1]
+                i2 += 1
+                index1 = self.indexOf(p1_cpy,f2[i2-1])
+                f1[i1] = p2_cpy[index1]
+                i1 += 1
+        if check:
+            index1 = self.indexOf(p1_cpy, f1[i1 - 1])
+            index1 = self.indexOf(p1_cpy, p2_cpy[index1])
+            latestUpdated2 = p2_cpy[index1]
+            f2[i2] = latestUpdated2
+            i2 += 1
+        return f1, f2
+
     # Função principal do programa
     def main(self,n):
         f = open("fri26_pmx","a")
