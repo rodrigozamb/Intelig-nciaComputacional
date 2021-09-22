@@ -1,3 +1,5 @@
+import numpy as np
+
 tsp_name = ["dantzig42",
             "fri26",
             "gr21"]
@@ -11,28 +13,37 @@ atsp_name = ["ft53",
             "rbg358",
             "rbg453",
             "rbg443"]
+lengths = [53, 34, 38, 171, 100, 323, 358, 403, 443]
 
-def run_file(filename):
-  with open(filename + '.tsp', 'r') as file:
+def readAsymmetric(filename, length):
+  with open(filename + '.atsp', 'r') as file:
         data = file.read()
 
-  matrix = data.split("EDGE_WEIGHT_SECTION")[1].split("EDGE_WEIGHT_SECTION_END")[0].strip().split('\n')
-  matrix_list = [item.strip().split() for item in matrix]
-  matrix_list = [list(map(float, i)) for i in matrix_list]
+  matrix = data.split("EDGE_WEIGHT_SECTION")[1].split("EOF")[0].strip().split('\n')
+  diag = [item.strip().split() for item in matrix]
+  diag = [list(map(int, i)) for i in diag]
 
-  coords = data.split("DISPLAY_DATA_SECTION")[1].split("DISPLAY_DATA_SECTION_END")[0].strip().split('\n')
-  cities = [item.strip().split() for item in coords]
-  cities = [list(map(float, i)) for i in cities]
-  
-  print('\nmatrix_list')
-  for i in matrix_list:
-    print(i)
-  
-  print('\ncities coordinates')
-  for i in cities:
-    print(i)
+  full_matrix = np.array(diag)
+  full_matrix = np.concatenate(full_matrix)
+  full_matrix = full_matrix.reshape(length, length)
+  count = 0
+
+  for i in full_matrix:
+    count += 1
+    print(count, i)
+        
+
+  # coords = data.split("DISPLAY_DATA_SECTION")[1].split("DISPLAY_DATA_SECTION_END")[0].strip().split('\n')
+  # cities = [item.strip().split() for item in coords]
+  # cities = [list(map(float, i)) for i in cities]
 
 if __name__ == '__main__':
-  for i in tsp_name:
-    print(i)
-    run_file('data/symmetric/'+i)
+  # for i in tsp_name:
+  #   print(i)
+  # #   run_file('data/symmetric/'+i)
+
+  # for i in atsp_name:
+  #   print(i)
+  #   readAsymmetric('data/assymetric/'+i)
+
+  readAsymmetric('data/assymetric/'+atsp_name[1], lengths[1])
