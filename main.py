@@ -58,6 +58,8 @@ class TravelingSalesman:
             plt.annotate("Cidade " + str(i), (self.cities[i][0], self.cities[i][1]))
         cidadesX = [self.cities[i][0] for i in cities]
         cidadesY = [self.cities[i][1] for i in cities]
+        cidadesX.append(cidadesX[0])
+        cidadesY.append(cidadesY[0])
         plt.plot(cidadesX,cidadesY)
         plt.show()
 
@@ -70,6 +72,7 @@ class TravelingSalesman:
         for i in range(len(element)-1):
             value += self.distanceMatrix[element[i]][element[i+1]]
             # value += self.calculateDistance(self.cities[element[i]],self.cities[element[i+1]])
+        value+=self.distanceMatrix[element[len(element)-1]][element[0]]
         return value
 
     #Função teste de cruzamento, (na há cruzamento, não consegui fazer)
@@ -202,10 +205,23 @@ class TravelingSalesman:
 
         return f1, f2
 
-    # FUnção principal do programa
-    def main(self):
+    # Função principal do programa
+    def main(self,n):
+        f = open("fri26_pmx","a")
+        f.write(f'Execução {n} :\n')
         self.simulate()
         self.plotCities(self.population[0])
+        f.write(f'Melhor = {self.evaluateElement(self.population[0])}\n')
+        f.write(f'Pior = {self.evaluateElement(self.population[self.populationSize-1])}\n')
+        f.write(f'Media = {self.calculateMedia()}\n')
+        f.write("\n")
+        f.close()
+        
+    def calculateMedia(self):
+        s = 0.0
+        for i in self.population:
+            s+=self.evaluateElement(i)
+        return s/self.populationSize
 
     def roullete(self):
         p1,p2 = random.randint(0,self.populationSize-1),random.randint(0,self.populationSize-1)
@@ -250,7 +266,7 @@ class TravelingSalesman:
                 p1,p2 = self.roullete()
                 # print("Pais")
                 # print(p1,p2)
-                f1,f2 = self.pmx_cx(p1, p2, 3, 5) # escolher os pais para cruzamento (roleta?)
+                f1,f2 = self.pmx_cx(p1, p2,3,5) # escolher os pais para cruzamento (roleta?)
                 # f1,f2 = self.normalCross(p1, p2) # escolher os pais para cruzamento (roleta?)
                 # print(p1,p2)
                 
@@ -263,9 +279,9 @@ class TravelingSalesman:
             for f in filhos:
                 self.population.append(f)
             # print("População junto com filhos")
-            print(self.population)
-            for i in range(len(self.population)):
-                print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
+            # print(self.population)
+            # for i in range(len(self.population)):
+            #     print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
             
             self.population.sort(key=self.evaluateElement)
             print(self.population)
@@ -273,12 +289,13 @@ class TravelingSalesman:
             while(len(self.population)>self.populationSize):
                 self.population.pop()
             
-            for i in range(len(self.population)):
-                print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
+            # for i in range(len(self.population)):
+            #     print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
             
-            input()
+            # input()
 
 # params: qntCidades, QntPopulacao, epochs, mutprob, crossprob
-ts = TravelingSalesman(8, 50, 10, 0.1, 0.8)
+ts = TravelingSalesman(8, 150, 500, 0.1, 0.8)
 
-ts.main()
+for i in range(30):
+    ts.main(i+1)
