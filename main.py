@@ -35,7 +35,12 @@ class TravelingSalesman:
             self.distanceMatrix.append(aux)
 
     def createCities(self):
-        self.cities = [[random.randint(0,10), random.randint(0,10)] for i in range(self.numberOfCities)]
+        # self.cities = [[random.randint(0,10), random.randint(0,10)] for i in range(self.numberOfCities)]
+        for i in range(self.numberOfCities):
+            city = [random.randint(0,10), random.randint(0,10)]
+            while (city in self.cities):
+                city = [random.randint(0,10), random.randint(0,10)]
+            self.cities.append(city)
 
     # Função que cria um elemento de forma aleatória
     def createElement(self):
@@ -134,6 +139,14 @@ class TravelingSalesman:
             elem[a] = elem[b]
             elem[b] = aux
 
+    def neighbor_mutate(self,elem):
+        x = random.uniform(0, 1)
+            
+        if(x<=self.mutationProb):
+            a = random.randint(0,self.numberOfCities-2)
+            aux = elem[a]
+            elem[a] = elem[a+1]
+            elem[a+1] = aux
 
     # Simula a evolução , ou seja, o passar das épocas com a evolução da população
     def simulate(self):
@@ -173,28 +186,10 @@ class TravelingSalesman:
             
             for i in range(len(self.population)):
                 print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
-            # if epoch == 1:
-            #     break
+            
+            input()
 
 # params: qntCidades, QntPopulacao, epochs, mutprob, crossprob
-ts = TravelingSalesman(8, 30, 10, 0.1, 0.8)
-# print(ts.population)
-# for i in range(4):
-#     p1,p2 = ts.roullete()
-#     print("pai 1 = ", p1)
-#     print("pai 2 = ", p2)
-    
+ts = TravelingSalesman(8, 50, 10, 0.1, 0.8)
 
 ts.main()
-
-# print('------testing cross over------')
-# s1 = ts.population[0]
-# s2 = ts.population[1]
-# print('s1, s2 before cross over')
-# print(s1, s2)
-# s1,s2 = ts.pmx_cx(s1, s2, 3, 5)
-# print('s1, s2 after cross over')
-# print(s1, s2)
-
-
-### Arrumar a matriz de distancias a ser utilizada, usar proababilidade de cross, gerar os filhos para depois selecionar os melhores, criar os 4 tipos de cross, finalizar a simulação das epocas e da evolução
