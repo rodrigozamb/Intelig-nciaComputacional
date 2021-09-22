@@ -113,6 +113,95 @@ class TravelingSalesman:
 
         return f1, f2
 
+    def order_cx(self, p1, p2, a, b):
+
+        f1, f2 = [0]*self.numberOfCities, [0]*self.numberOfCities
+
+        for i in range(len(p1)):
+            f1[i] = p1[i]
+        for i in range(len(p2)):
+            f2[i] = p2[i]
+
+        ind_size = len(f1)
+
+        indx1 = [0] * ind_size
+        indx2 = [0] * ind_size
+        for i, x in enumerate(f1):
+            indx1[x] = i
+        for i, x in enumerate(f2):
+            indx2[x] = i
+
+
+        f2_cpy = f2.copy()
+        f1_cpy = f1.copy()
+
+        for k in range(a, b + 1):
+            f2_cpy[indx2[f1[k]]] = -1
+            f1_cpy[indx1[f2[k]]] = -1
+
+        ptr1 = ptr2 = (b + 1) % ind_size
+
+        for i in range(ind_size - (b - a + 1)):
+
+            while f2_cpy[ptr2] == -1:
+                ptr2 = (ptr2 + 1) % ind_size
+            while f1_cpy[ptr1] == -1:
+                ptr1 = (ptr1 + 1) % ind_size
+
+            f1[(b + i + 1) % ind_size] = f2_cpy[ptr2]
+            f2[(b + i + 1) % ind_size] = f1_cpy[ptr1]
+
+            ptr1 = (ptr1 + 1) % ind_size
+            ptr2 = (ptr2 + 1) % ind_size
+
+        return f1, f2
+
+    def cycle_cx(self, p1, p2):
+
+        f1, f2 = [0]*self.numberOfCities, [0]*self.numberOfCities
+
+        for i in range(len(p1)):
+            f1[i] = p1[i]
+        for i in range(len(p2)):
+            f2[i] = p2[i]
+
+        ind_size = len(f1)
+        o1 = [-1]*ind_size
+        o2 = [-1]*ind_size
+
+        indx1 = [0] * ind_size
+        indx2 = [0] * ind_size
+        for i, x in enumerate(f1):
+            indx1[x] = i
+        for i, x in enumerate(f2):
+            indx2[x] = i
+
+        i = 0
+        o1[i] = f1[i]
+        i = indx1[f2[i]]
+        while o1[i] == -1 :
+            o1[i] = f1[i]
+            i = indx1[f2[i]]
+        for i in range(ind_size) :
+            if o1[i] == -1:
+                o1[i] = f2[i]
+
+        i = 0
+        o2[i] = f2[i]
+        i = indx2[f1[i]]
+        while o2[i] == -1:
+            o2[i] = f2[i]
+            i = indx2[f1[i]]
+        for i in range(ind_size):
+            if o2[i] == -1:
+                o2[i] = f1[i]
+
+        f1[:] = o1[:]
+        f2[:] = o2[:]
+
+
+        return f1, f2
+
     # FUnção principal do programa
     def main(self):
         self.simulate()
