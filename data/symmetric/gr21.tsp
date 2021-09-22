@@ -27,6 +27,9 @@ EDGE_WEIGHT_SECTION
    240   290   590   140   480   255   205   220   515   150            
    100   170   390   425   255   395   205   220   155     0            
    380   140   495   280   480   340   350   370   505   185            
-   240   310   345   280   105   380   280   165   305   150            
+   240   310   345   280   105   380   280   165   305   150    
      0                                                      
+EDGE_WEIGHT_SECTION_END
+DISPLAY_DATA_SECTION
+DISPLAY_DATA_SECTION_END
 EOF            
