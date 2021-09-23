@@ -2,7 +2,8 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import permutations
-
+import readData
+import cx2
 class TravelingSalesman:
 
     population = []
@@ -23,9 +24,8 @@ class TravelingSalesman:
             self.population.append( self.createElement() ) # população inicial
 
         self.createDistanceMatrix()
+        # self.distanceMatrix = readData.readAsymmetric('data/assymetric/ftv170', 171)
 
-
-    # Função que cria a matriz de distancia das cidades
     def createDistanceMatrix(self):
 
         for c1 in self.cities:
@@ -42,7 +42,7 @@ class TravelingSalesman:
                 city = [random.randint(0,10), random.randint(0,10)]
             self.cities.append(city)
 
-    # Função que cria um elemento de forma aleatória
+    # Função que cria uma cidade de forma aleatória
     def createElement(self):
         el = []
         while len(el) < self.numberOfCities:
@@ -72,7 +72,7 @@ class TravelingSalesman:
         for i in range(len(element)-1):
             value += self.distanceMatrix[element[i]][element[i+1]]
             # value += self.calculateDistance(self.cities[element[i]],self.cities[element[i+1]])
-        value+=self.distanceMatrix[element[len(element)-1]][element[0]]
+            value+=self.distanceMatrix[element[len(element)-1]][element[0]]
         return value
 
     #Função teste de cruzamento, (na há cruzamento, não consegui fazer)
@@ -80,7 +80,10 @@ class TravelingSalesman:
 
         return self.createElement(),self.createElement()
 
-    def pmx_cx(self, p1, p2, a, b):
+    def pmx_cx(self, p1, p2):
+
+        a = random.randint(0,self.numberOfCities-2)
+        b = random.randint(a+1,self.numberOfCities-1)
 
         f1, f2 = [0]*self.numberOfCities, [0]*self.numberOfCities
 
@@ -116,7 +119,10 @@ class TravelingSalesman:
 
         return f1, f2
 
-    def order_cx(self, p1, p2, a, b):
+    def order_cx(self, p1, p2):
+
+        a = random.randint(0,self.numberOfCities-2)
+        b = random.randint(a+1,self.numberOfCities-1)
 
         f1, f2 = [0]*self.numberOfCities, [0]*self.numberOfCities
 
@@ -228,8 +234,6 @@ class TravelingSalesman:
         for i in range(len(p2)):
             p2_cpy[i] = p2[i]
 
-
-        print('hellol shakoob')
         f1 = [None] * p1_cpy.__len__()
         f2 = [None] * p2_cpy.__len__()
         i1 = 0
@@ -271,12 +275,12 @@ class TravelingSalesman:
             i2 += 1
         return f1, f2
 
-    # Função principal do programa
+    # FUnção principal do programa
     def main(self,n):
-        f = open("fri26_pmx","a")
+        f = open("kro124p_ox.txt","a")
         f.write(f'Execução {n} :\n')
         self.simulate()
-        self.plotCities(self.population[0])
+        # self.plotCities(self.population[0])
         f.write(f'Melhor = {self.evaluateElement(self.population[0])}\n')
         f.write(f'Pior = {self.evaluateElement(self.population[self.populationSize-1])}\n')
         f.write(f'Media = {self.calculateMedia()}\n')
@@ -298,7 +302,6 @@ class TravelingSalesman:
     def mutate(self,elem):
 
         x = random.uniform(0, 1)
-            
         if(x<=self.mutationProb):
             a = random.randint(0,self.numberOfCities-1)
             b = random.randint(0,self.numberOfCities-1)
@@ -332,8 +335,10 @@ class TravelingSalesman:
                 p1,p2 = self.roullete()
                 # print("Pais")
                 # print(p1,p2)
-                f1,f2 = self.pmx_cx(p1, p2,3,5) # escolher os pais para cruzamento (roleta?)
-                # f1,f2 = self.normalCross(p1, p2) # escolher os pais para cruzamento (roleta?)
+                # f1,f2 = self.pmx_cx(p1, p2, 3, 5)
+                # f1,f2 = self.order_cx(p1, p2, 3, 5)
+                f1, f2 = cx2.cycle2_cx(p1, p2)
+                # f1,f2 = self.normalCross(p1, p2) 
                 # print(p1,p2)
                 
                 self.mutate(f1)
@@ -345,9 +350,9 @@ class TravelingSalesman:
             for f in filhos:
                 self.population.append(f)
             # print("População junto com filhos")
-            # print(self.population)
-            # for i in range(len(self.population)):
-            #     print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
+            print(self.population)
+            for i in range(len(self.population)):
+                print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
             
             self.population.sort(key=self.evaluateElement)
             print(self.population)
@@ -360,8 +365,9 @@ class TravelingSalesman:
             
             # input()
 
-# params: qntCidades, QntPopulacao, epochs, mutprob, crossprob
-ts = TravelingSalesman(8, 150, 500, 0.1, 0.8)
+if __name__ == "__main__":
+    # params: qntCidades, QntPopulacao, epochs, mutprob, crossprob
+    ts = TravelingSalesman(100, 200, 1000, 0.1, 0.8)
 
-for i in range(30):
-    ts.main(i+1)
+    for i in range(30):
+        ts.main(i+1)
