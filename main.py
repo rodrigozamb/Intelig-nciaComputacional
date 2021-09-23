@@ -2,6 +2,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import permutations
+from fri26Matrix import *
 
 class TravelingSalesman:
 
@@ -23,6 +24,7 @@ class TravelingSalesman:
             self.population.append( self.createElement() ) # população inicial
 
         self.createDistanceMatrix()
+        # self.distanceMatrix = fri26DistanceMatrix
 
 
     # Função que cria a matriz de distancia das cidades
@@ -80,7 +82,10 @@ class TravelingSalesman:
 
         return self.createElement(),self.createElement()
 
-    def pmx_cx(self, p1, p2, a, b):
+    def pmx_cx(self, p1, p2):
+
+        a = random.randint(0,self.numberOfCities-2)
+        b = random.randint(a+1,self.numberOfCities-1)
 
         f1, f2 = [0]*self.numberOfCities, [0]*self.numberOfCities
 
@@ -116,7 +121,10 @@ class TravelingSalesman:
 
         return f1, f2
 
-    def order_cx(self, p1, p2, a, b):
+    def order_cx(self, p1, p2):
+
+        a = random.randint(0,self.numberOfCities-2)
+        b = random.randint(a+1,self.numberOfCities-1)
 
         f1, f2 = [0]*self.numberOfCities, [0]*self.numberOfCities
 
@@ -271,10 +279,50 @@ class TravelingSalesman:
             i2 += 1
         return f1, f2
 
+    def CX2(self,p1,p2):
+        o1,o2 = [-1]*self.numberOfCities,[-1]*self.numberOfCities
+
+        # print(p1,p2)
+        f = True
+        for i in range(self.numberOfCities):
+            if((-1 not in o1 and -1 not in o2)):
+                break
+            
+            if(p1[0] in o2):
+                f = False
+                reset = 0
+                for k in p2:
+                    if k not in o1:
+                        reset = k
+                        break
+
+                o1[i] = reset
+                o2[i] = p2[p1.index(p2[p1.index(o1[i])])]
+                # print(o1,o2)
+                continue
+
+
+            if i == 0:
+                o1[0] = p2[0]
+                o2[i] = p2[p1.index(p2[p1.index(o1[i])])]
+                # print(o1,o2)
+            else:
+                o1[i] = p2[p1.index(o2[i-1])]
+                o2[i] = p2[  p1.index(p2[p1.index(o1[i])])]
+                # print(o1,o2)
+        return o1,o2
+
+    def handle_conversion(self):
+        occ = self.population.count(self.population[0])
+        if (occ/self.populationSize >= 0.90):
+            return True
+        else:
+            return False
+
     # Função principal do programa
-    def main(self,n):
-        f = open("fri26_pmx","a")
-        f.write(f'Execução {n} :\n')
+    def main(self):
+        f = open("AAAA.txt","a")
+        f.write(f'Execução : \n')
         self.simulate()
         self.plotCities(self.population[0])
         f.write(f'Melhor = {self.evaluateElement(self.population[0])}\n')
@@ -332,7 +380,7 @@ class TravelingSalesman:
                 p1,p2 = self.roullete()
                 # print("Pais")
                 # print(p1,p2)
-                f1,f2 = self.pmx_cx(p1, p2,3,5) # escolher os pais para cruzamento (roleta?)
+                f1,f2 = self.CX2(p1, p2) # escolher os pais para cruzamento (roleta?)
                 # f1,f2 = self.normalCross(p1, p2) # escolher os pais para cruzamento (roleta?)
                 # print(p1,p2)
                 
@@ -350,18 +398,17 @@ class TravelingSalesman:
             #     print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
             
             self.population.sort(key=self.evaluateElement)
-            print(self.population)
+            # print(self.population)
 
             while(len(self.population)>self.populationSize):
                 self.population.pop()
             
             # for i in range(len(self.population)):
             #     print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
-            
-            # input()
+            if(self.handle_conversion()):
+                break
 
 # params: qntCidades, QntPopulacao, epochs, mutprob, crossprob
 ts = TravelingSalesman(8, 150, 500, 0.1, 0.8)
 
-for i in range(30):
-    ts.main(i+1)
+ts.main()
