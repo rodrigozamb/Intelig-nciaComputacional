@@ -26,11 +26,9 @@ def readAsymmetric(filename, length):
   full_matrix = np.array(diag)
   full_matrix = np.concatenate(full_matrix)
   full_matrix = full_matrix.reshape(length, length)
-  count = 0
+  full_matrix = full_matrix.tolist()
 
-  for i in full_matrix:
-    count += 1
-    print(count, i)
+  return full_matrix
         
 
   # coords = data.split("DISPLAY_DATA_SECTION")[1].split("DISPLAY_DATA_SECTION_END")[0].strip().split('\n')
@@ -46,4 +44,4 @@ if __name__ == '__main__':
   #   print(i)
   #   readAsymmetric('data/assymetric/'+i)
 
-  readAsymmetric('data/assymetric/'+atsp_name[1], lengths[1])
+  print(readAsymmetric('data/assymetric/ftv170', 171))
