@@ -20,11 +20,11 @@ class TravelingSalesman:
 
         self.createCities()
         
-        for i in range(QntPopulacao): # pra cada individuo da população
-            self.population.append( self.createElement() ) # população inicial
+        for i in range(QntPopulacao):
+            self.population.append( self.createElement() )
 
-        self.createDistanceMatrix()
-        # self.distanceMatrix = readData.readAsymmetric('data/assymetric/ftv170', 171)
+        # self.createDistanceMatrix()
+        self.distanceMatrix = readData.readAsymmetric('data/assymetric/kro124p', 100)
 
     def createDistanceMatrix(self):
 
@@ -35,7 +35,6 @@ class TravelingSalesman:
             self.distanceMatrix.append(aux)
 
     def createCities(self):
-        # self.cities = [[random.randint(0,10), random.randint(0,10)] for i in range(self.numberOfCities)]
         for i in range(self.numberOfCities):
             city = [random.randint(0,10), random.randint(0,10)]
             while (city in self.cities):
@@ -71,11 +70,10 @@ class TravelingSalesman:
         value = 0.0
         for i in range(len(element)-1):
             value += self.distanceMatrix[element[i]][element[i+1]]
-            # value += self.calculateDistance(self.cities[element[i]],self.cities[element[i+1]])
-            value+=self.distanceMatrix[element[len(element)-1]][element[0]]
+        value += self.distanceMatrix[element[len(element)-1]][element[0]]
         return value
 
-    #Função teste de cruzamento, (na há cruzamento, não consegui fazer)
+    #Função teste de cruzamento
     def normalCross(self,el1,el2):
 
         return self.createElement(),self.createElement()
@@ -211,74 +209,50 @@ class TravelingSalesman:
 
         return f1, f2
 
-    def indexOf(self, arr, x):
-        for a in range(0,arr.__len__()):
-            if arr[a] == x:
-                return a
-        return -1
+    def CX2(self,p1,p2):
+        o1,o2 = [-1]*self.numberOfCities,[-1]*self.numberOfCities
 
-    def findUnusedIndexValues(self, p, f):
-        res = list()
-        for a in p:
-            if self.indexOf(f,a) == -1:
-                res.append(a)
-        return res
-
-    def cycle2_cx(self, p1, p2):
-
-        p1_cpy = [None] * p1.__len__()
-        p2_cpy = [None] * p2.__len__()
-
-        for i in range(len(p1)):
-            p1_cpy[i] = p1[i]
-        for i in range(len(p2)):
-            p2_cpy[i] = p2[i]
-
-        f1 = [None] * p1_cpy.__len__()
-        f2 = [None] * p2_cpy.__len__()
-        i1 = 0
-        i2 = 0
-        initial = p1_cpy[0]
-        f1[i1] = p2_cpy[0]
-        i1 += 1
-        # latestUpdated2 = p2_cpy[0]
-        check = 1
-
-        while i1 < p1_cpy.__len__() and i2 < p2_cpy.__len__():
-            index1 = self.indexOf(p1_cpy,f1[i1-1])
-            index1 = self.indexOf(p1_cpy,p2_cpy[index1])
-            latestUpdated2 = p2_cpy[index1]
-            if latestUpdated2 == initial:
-                f2[i2] = latestUpdated2
-                i2 += 1
-                # print("cycle detected")
-                check = 0
-                res1 = self.findUnusedIndexValues(p1_cpy,f1)
-                res2 = self.findUnusedIndexValues(p2_cpy,f2)
-                # print(res1,res2)
-                ans1,ans2 = self.cycle2_cx(res1, res2)
-                f1[i1:] = ans1
-                f2[i2:] = ans2
-                check = 0
+        # print(p1,p2)
+        f = True
+        for i in range(self.numberOfCities):
+            if((-1 not in o1 and -1 not in o2)):
                 break
-            else:
-                f2[i2] = p2_cpy[index1]
-                i2 += 1
-                index1 = self.indexOf(p1_cpy,f2[i2-1])
-                f1[i1] = p2_cpy[index1]
-                i1 += 1
-        if check:
-            index1 = self.indexOf(p1_cpy, f1[i1 - 1])
-            index1 = self.indexOf(p1_cpy, p2_cpy[index1])
-            latestUpdated2 = p2_cpy[index1]
-            f2[i2] = latestUpdated2
-            i2 += 1
-        return f1, f2
+            
+            if(p1[0] in o2):
+                f = False
+                reset = 0
+                for k in p2:
+                    if k not in o1:
+                        reset = k
+                        break
 
-    # FUnção principal do programa
-    def main(self,n):
-        f = open("kro124p_ox.txt","a")
-        f.write(f'Execução {n} :\n')
+                o1[i] = reset
+                o2[i] = p2[p1.index(p2[p1.index(o1[i])])]
+                # print(o1,o2)
+                continue
+
+
+            if i == 0:
+                o1[0] = p2[0]
+                o2[i] = p2[p1.index(p2[p1.index(o1[i])])]
+                # print(o1,o2)
+            else:
+                o1[i] = p2[p1.index(o2[i-1])]
+                o2[i] = p2[  p1.index(p2[p1.index(o1[i])])]
+                # print(o1,o2)
+        return o1,o2
+
+    def handle_conversion(self):
+        occ = self.population.count(self.population[0])
+        if (occ/self.populationSize >= 0.90):
+            return True
+        else:
+            return False
+
+    # Função principal do programa
+    def main(self, exec):
+        f = open("kro124p_cx2.txt","a")
+        f.write(f'Execução : ${exec}\n')
         self.simulate()
         # self.plotCities(self.population[0])
         f.write(f'Melhor = {self.evaluateElement(self.population[0])}\n')
@@ -327,19 +301,11 @@ class TravelingSalesman:
 
         for epoch  in range(self.epochs):
             print(f'Epoch {epoch}')
-            # print("População inicial da epoca")
-            # print(self.population)
             filhos = []
             
             for j in range(int((self.crossoverProb*self.populationSize)/2)):
                 p1,p2 = self.roullete()
-                # print("Pais")
-                # print(p1,p2)
-                # f1,f2 = self.pmx_cx(p1, p2, 3, 5)
-                # f1,f2 = self.order_cx(p1, p2, 3, 5)
-                f1, f2 = cx2.cycle2_cx(p1, p2)
-                # f1,f2 = self.normalCross(p1, p2) 
-                # print(p1,p2)
+                f1,f2 = self.CX2(p1, p2)
                 
                 self.mutate(f1)
                 self.mutate(f2)
@@ -355,15 +321,13 @@ class TravelingSalesman:
                 print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
             
             self.population.sort(key=self.evaluateElement)
-            print(self.population)
+            # print(self.population)
 
             while(len(self.population)>self.populationSize):
                 self.population.pop()
             
-            # for i in range(len(self.population)):
-            #     print(f'pop[{i}] = {self.evaluateElement(self.population[i])}')
-            
-            # input()
+            if(self.handle_conversion()):
+                break
 
 if __name__ == "__main__":
     # params: qntCidades, QntPopulacao, epochs, mutprob, crossprob
