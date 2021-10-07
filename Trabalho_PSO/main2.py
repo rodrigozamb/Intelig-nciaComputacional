@@ -246,6 +246,90 @@ class PSO:
 
 		return f1, f2
 
+	def pmx_cx(self, p1, p2):
+
+		a = random.randint(0,self.graph.amount_vertices-2)
+		b = random.randint(a+1,self.graph.amount_vertices-1)
+
+		f1, f2 = [0]*self.graph.amount_vertices, [0]*self.graph.amount_vertices
+
+		for i in range(len(p1)):
+		    f1[i] = p1[i]
+		for i in range(len(p2)):
+		    f2[i] = p2[i]
+
+		numCities = len(f1)
+		idx1 = [0] * numCities
+		idx2 = [0] * numCities
+
+		for i, x in enumerate(f1):
+		    idx1[x] = i
+		for i, x in enumerate(f2):
+		    idx2[x] = i
+
+		for i in range(a, b+1) :
+		    f1[i], f2[i] = f2[i], f1[i]
+
+		irange = list(range(0,a)) + list(range(b+1, numCities))
+
+		for i in irange:
+		    x = f1[i]
+		    while idx2[x] >=a and idx2[x] <= b :
+		        x = f2[idx2[x]]
+		    f1[i] = x
+
+		    x = f2[i]
+		    while idx1[x] >= a and idx1[x] <= b:
+		        x = f1[idx1[x]]
+		    f2[i] = x
+
+		return f1, f2
+
+	def cycle_cx(self, p1, p2):
+
+		f1, f2 = [0]*self.graph.amount_vertices, [0]*self.graph.amount_vertices
+
+		for i in range(len(p1)):
+		    f1[i] = p1[i]
+		for i in range(len(p2)):
+		    f2[i] = p2[i]
+
+		ind_size = len(f1)
+		o1 = [-1]*ind_size
+		o2 = [-1]*ind_size
+
+		indx1 = [0] * ind_size
+		indx2 = [0] * ind_size
+		for i, x in enumerate(f1):
+		    indx1[x] = i
+		for i, x in enumerate(f2):
+		    indx2[x] = i
+
+		i = 0
+		o1[i] = f1[i]
+		i = indx1[f2[i]]
+		while o1[i] == -1 :
+		    o1[i] = f1[i]
+		    i = indx1[f2[i]]
+		for i in range(ind_size) :
+		    if o1[i] == -1:
+		        o1[i] = f2[i]
+
+		i = 0
+		o2[i] = f2[i]
+		i = indx2[f1[i]]
+		while o2[i] == -1:
+		    o2[i] = f2[i]
+		    i = indx2[f1[i]]
+		for i in range(ind_size):
+		    if o2[i] == -1:
+		        o2[i] = f1[i]
+
+		f1[:] = o1[:]
+		f2[:] = o2[:]
+
+
+		return f1, f2	
 
 	def run(self):
 		
@@ -325,7 +409,7 @@ class PSO:
 				p1 = random.randint(0,self.size_population-1)
 				p2 = random.randint(0,self.size_population-1)
 
-				sol_f1,sol_f2 = self.order_cx(self.particles[p1].solution,self.particles[p2].solution)
+				sol_f1,sol_f2 = self.cycle_cx(self.particles[p1].solution,self.particles[p2].solution)
 
 				f1 = Particle(sol_f1,self.graph.getCostPath(sol_f1))
 				f2 = Particle(sol_f2,self.graph.getCostPath(sol_f2))
@@ -398,5 +482,7 @@ if __name__ == "__main__":
 	pso.run() # runs the PSO algorithm
 	pso.showsParticles() # shows the particles
 
+	pmxFile = open("cicle_results.txt","a")
 	# shows the global best particle
 	print('gbest: %s | cost: %d\n' % (pso.getGBest().getPBest(), pso.getGBest().getCostPBest()))
+	pmxFile.write(str(pso.getGBest().getCostPBest())+" \n")
