@@ -1,7 +1,6 @@
 from operator import attrgetter, le
 import random, sys, time, copy
-
-
+import readData
 
 # class that represents a graph
 class Graph:
@@ -80,6 +79,16 @@ class Graph:
 		for i in range(len(fri26DistanceMatrix)):
 			for j in range(len(fri26DistanceMatrix[i])):
 				self.addEdge(i,j,fri26DistanceMatrix[i][j])
+
+	def loadAssym(self, filename='../data/assymetric/kro124p', length=100):
+		distanceMatrix = readData.readAsymmetric(filename, length)
+		self.edges = {}
+		self.vertices = set() 
+		self.amount_vertices = len(distanceMatrix[0])
+
+		for i in range(len(distanceMatrix)):
+			for j in range(len(distanceMatrix[i])):
+				self.addEdge(i,j,distanceMatrix[i][j])
 
 	def generateComplete(self):
 		for i in range(self.amount_vertices):
@@ -340,63 +349,50 @@ class PSO:
 			self.particles = self.particles[:self.size_population]
 
 			
+def main(exec, filename, length):
+	f = open('results/'+filename+'.txt', "a")
+	f.write(f'Execução: ${exec}\n')
 
+	# params: qntCidades
+	graph = Graph(amount_vertices=length)
+	graph.loadAssym('../data/assymetric/'+filename, length)
+	pso = PSO(graph, iterations=500, size_population=500,initial_position=3,cross_percent=0.8, beta=0.2, alfa=0.8)
+	pso.run()
+	pso.showsParticles()
+	print('gbest: %s | cost: %d\n' % (pso.getGBest().getPBest(), pso.getGBest().getCostPBest()))
 
+	f.write(f'gbest: %s | cost: {pso.getGBest().getPBest(), pso.getGBest().getCostPBest()}\n')
+	f.write("\n")
+	f.close()
+	return pso.getGBest().getCostPBest()
 		
 
 if __name__ == "__main__":
-	
-	# creates the Graph instance
-	graph = Graph(amount_vertices=6)
 
-	# This graph is in the folder "images" of the repository.
-	graph.addEdge(0, 1, 1)
-	graph.addEdge(0, 2, 3)
-	graph.addEdge(0, 3, 4)
-	graph.addEdge(0, 4, 5)
-	graph.addEdge(0, 5, 6)
+	atsp_name = [
+						# "ft53",
+            # "ftv33",
+            "ftv38",
+            "ftv170",
+            "kro124p",
+            "rbg323",
+            "rbg358",
+            "rbg403",
+            "rbg443"]
+	lengths = [
+						# 53, 34, 
+						39, 171, 100, 323, 358, 403, 443]
 
-	graph.addEdge(1, 0, 1)
-	graph.addEdge(1, 2, 1) 
-	graph.addEdge(1, 3, 4)
-	graph.addEdge(1, 4, 8)
-	graph.addEdge(1, 5, 5)
-	
-	graph.addEdge(2, 0, 3)
-	graph.addEdge(2, 1, 1)
-	graph.addEdge(2, 3, 5)
-	graph.addEdge(2, 4, 1)
-	graph.addEdge(2, 5, 6)
+	for i in range(len(atsp_name)):
+		cost = 0
 
-	graph.addEdge(3, 0, 4)
-	graph.addEdge(3, 1, 4)
-	graph.addEdge(3, 2, 5)
-	graph.addEdge(3, 4, 2)
-	graph.addEdge(3, 5, 4)
-	
-	graph.addEdge(4, 0, 5)
-	graph.addEdge(4, 1, 8)
-	graph.addEdge(4, 2, 1)
-	graph.addEdge(4, 3, 2)
-	graph.addEdge(4, 5, 2)
+		f = open("results/"+atsp_name[i]+'.txt', "a")
+		f.write(f'---------{atsp_name[i]} : {lengths[i]}---------\n\n')
+		f.close()
 
-	graph.addEdge(5, 0, 6)
-	graph.addEdge(5, 1, 3)
-	graph.addEdge(5, 2, 4)
-	graph.addEdge(5, 3, 1)
-	graph.addEdge(5, 4, 5)
-	
+		for j in range(30):
+			cost += main(j+1, atsp_name[i], lengths[i])
 
-	graph.loadfri06()
-
-	# creates a PSO instance
-	pso = PSO(graph, iterations=500, size_population=150,initial_position=3,cross_percent=0.8, beta=1, alfa=0.9)
-
-	# print('População inicial : ')
-	# pso.showsParticles()
-	# print()
-	pso.run() # runs the PSO algorithm
-	pso.showsParticles() # shows the particles
-
-	# shows the global best particle
-	print('gbest: %s | cost: %d\n' % (pso.getGBest().getPBest(), pso.getGBest().getCostPBest()))
+		f = open("results/"+atsp_name[i]+'.txt', "a")
+		f.write(f'Media custo : {cost/30}\n\n')
+		f.close()
