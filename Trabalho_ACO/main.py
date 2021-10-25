@@ -1,20 +1,26 @@
-from operator import attrgetter, le
-import random, sys, time, copy
-import readData
+from operator import attrgetter
+import random, copy
 
-# class that represents a graph
+
 class Graph:
 
 	def __init__(self, amount_vertices):
 		self.edges = {} 
 		self.vertices = set()
+		self.pheromoneMap = {}
 		self.amount_vertices = amount_vertices 
+
 
 	def addEdge(self, src, dest, cost = 0):
 		if (src, dest) not in self.edges:
 			self.edges[(src, dest)] = cost
+			self.pheromoneMap[(src, dest)] = 0.0
 			self.vertices.add(src)
 			self.vertices.add(dest)
+
+	def showPheromoneMap(self):
+		for i in self.pheromoneMap:
+			print(i[0],i[1],self.pheromoneMap[(i[0],i[1])])
 
 	def showGraph(self):
 		print('Showing the graph:\n')
@@ -72,16 +78,6 @@ class Graph:
 			for j in range(len(fri26DistanceMatrix[i])):
 				self.addEdge(i,j,fri26DistanceMatrix[i][j])
 
-	def loadAssym(self, filename='../data/assymetric/kro124p', length=100):
-		distanceMatrix = readData.readAsymmetric(filename, length)
-		self.edges = {}
-		self.vertices = set() 
-		self.amount_vertices = len(distanceMatrix[0])
-
-		for i in range(len(distanceMatrix)):
-			for j in range(len(distanceMatrix[i])):
-				self.addEdge(i,j,distanceMatrix[i][j])
-
 	def generateComplete(self):
 		for i in range(self.amount_vertices):
 			for j in range(self.amount_vertices):
@@ -90,88 +86,57 @@ class Graph:
 					self.addEdge(i, j, weight)
 
 
-class Particle:
+class Ant:
 
-	def __init__(self, solution, cost):
+	def __init__(self, initial_pos):
 
-		self.solution = solution
+		self.initial_pos = initial_pos
+		self.last_pos = initial_pos
+		self.path = [initial_pos]
+		self.pathCost = 0.0
 
-		self.pbest = solution
+	def setPath(self, path):
+		self.path = path
 
-		self.cost_current_solution = cost
-		self.cost_pbest_solution = cost
+	def getPath(self):
+		return self.path
 
-		self.velocity = []
+	def setPathCost(self, pathCost):
+		self.path = pathCost
 
-	def setPBest(self, new_pbest):
-		self.pbest = new_pbest
+	def getPathCost(self):
+		return self.pathCost
 
-	def getPBest(self):
-		return self.pbest
+	def move(self,newPos):
+		self.path.append(newPos)
+		self.last_pos = newPos
 
-	def setVelocity(self, new_velocity):
-		self.velocity = new_velocity
-
-	def getVelocity(self):
-		return self.velocity
-
-	def setCurrentSolution(self, solution):
-		self.solution = solution
-
-	def getCurrentSolution(self):
-		return self.solution
-
-	def setCostPBest(self, cost):
-		self.cost_pbest_solution = cost
-
-	def getCostPBest(self):
-		return self.cost_pbest_solution
-
-	def setCostCurrentSolution(self, cost):
-		self.cost_current_solution = cost
-
-	def getCostCurrentSolution(self):
-		return self.cost_current_solution
-
-	def clearVelocity(self):
-		del self.velocity[:]
+	
 
 
-class PSO:
+
+class ACO:
 
 	def __init__(self, graph, iterations, size_population,initial_position,cross_percent, beta=1, alfa=1):
 		self.graph = graph 
 		self.iterations = iterations 
 		self.size_population = size_population 
-		self.particles = [] 
+		self.ants = [] 
 		self.beta = beta
 		self.alfa = alfa 
 		self.cross_percent = cross_percent 
-
-		# iniciar a população 
-		solutions = self.graph.getRandomPaths(self.size_population,initial_position)
-
-		for solution in solutions:
-			
-			particle = Particle(solution=solution, cost=graph.getCostPath(solution))
-			
-			self.particles.append(particle)
-
-		
-		self.size_population = len(self.particles)
+		self.gbest = []
+		self.initial_position = initial_position
 
 
 	def getGBest(self):
 		return self.gbest
 
+	def showsAnts(self):
 
-	def showsParticles(self):
-
-		print('Partículas do PSO...\n')
-		for particle in self.particles:
-			print('Melhor Local: %s\t|\tCusto: %d\t|\tPath: %s\t|\tCusto Atual: %d' \
-				% (str(particle.getPBest()), particle.getCostPBest(), str(particle.getCurrentSolution()),
-							particle.getCostCurrentSolution()))
+		print('Formigas do ACO...\n')
+		for ant in self.ants:
+			print(f'Path = {ant.getPath()}  -  Cost = {ant.getPathCost()}')
 		print('')
 
 	def order_cx(self, p1, p2):
@@ -305,134 +270,231 @@ class PSO:
 
 		return f1, f2	
 
+	def sortAux(self,elem):
+		x,y,z = elem
+		return z
+
+	def calculate_next_move(self,ant):
+
+		last_pos = ant.last_pos
+		possible_nexts = []
+		max_v = 0
+
+		for (x,y) in self.graph.pheromoneMap:
+			if x == last_pos and y not in ant.path :	
+				possible_nexts.append((x,y,self.graph.pheromoneMap[(x,y)]))
+				
+		possible_nexts.sort(key=self.sortAux)
+		
+		for (x,y,z) in possible_nexts:
+			max_v = z
+
+		# print("Max_v = ",max_v)
+		if(max_v == 0):
+			print('escolheu um caminho aleatorio')
+			rand_y = random.randint(0,len(possible_nexts)-1)
+			(x,y,z) =  possible_nexts[rand_y]
+			return y
+
+		pivot = random.random()*max_v
+
+		next_pos = -1
+
+		for (x,y,z) in possible_nexts:
+			if(next_pos == -1):
+				next_pos = y
+			elif( z >= pivot):
+				continue
+			else:
+				next_pos = y
+
+		# print(possible_nexts)
+		# print(pivot)
+		# print(f'next pos = {next_pos}')
+		return next_pos
+
+	def evaporePheromoneMap(self,porcentage):
+		for (x,y) in self.graph.pheromoneMap:
+			self.graph.pheromoneMap[(x,y)] -= self.graph.pheromoneMap[(x,y)]*porcentage
+
 	def run(self):
 		
 
 		for t in range(self.iterations):
 
+			
+			
+			self.ants = []
+			for i in range(self.size_population):
+			
+				ant = Ant(self.initial_position)
+			
+				self.ants.append(ant)
+			
+			for i in range(self.graph.amount_vertices-1):
+				for ant in self.ants:
+					last_pos = ant.last_pos
+
+					next_pos = self.calculate_next_move(ant)
+
+					ant.path.append(next_pos)
+					ant.pathCost += self.graph.edges[(last_pos,next_pos)]
+					
+
+					self.graph.pheromoneMap[(last_pos,next_pos)] += (1/self.graph.edges[(last_pos,next_pos)])
+					
+					ant.last_pos = next_pos
+
+			print("Ants: ")
+			for ant in self.ants:
+				print(ant.path, " - ",ant.pathCost)
+			
+			# self.graph.showPheromoneMap()
+
 			# atualiza o melhor global 
-			self.gbest = min(self.particles, key=attrgetter('cost_pbest_solution'))
-			
-			for particle in self.particles:
-				
-				particle.clearVelocity()
-				temp_velocity = []
-				solution_gbest = copy.copy(self.gbest.getPBest()) 
-				solution_pbest = particle.getPBest()[:] 
-				solution_particle = particle.getCurrentSolution()[:] 
-
-				# calcula os swaps pra calcular o melhor local
-				for i in range(self.graph.amount_vertices):
-					if solution_particle[i] != solution_pbest[i]:
-						
-						swap_operator = (i, solution_pbest.index(solution_particle[i]), self.alfa)
-
-						temp_velocity.append(swap_operator)
-
-						aux = solution_pbest[swap_operator[0]]
-						solution_pbest[swap_operator[0]] = solution_pbest[swap_operator[1]]
-						solution_pbest[swap_operator[1]] = aux
-
-				# calcula os swaps pra calcular o melhor global
-				for i in range(self.graph.amount_vertices):
-					if solution_particle[i] != solution_gbest[i]:
-						
-						swap_operator = (i, solution_gbest.index(solution_particle[i]), self.beta)
-
-						temp_velocity.append(swap_operator)
-
-						aux = solution_gbest[swap_operator[0]]
-						solution_gbest[swap_operator[0]] = solution_gbest[swap_operator[1]]
-						solution_gbest[swap_operator[1]] = aux
-
-				
-				particle.setVelocity(temp_velocity)
-
-				# faz a trocas e gera o a nova solução da particula
-				for swap_operator in temp_velocity:
-					if random.random() <= swap_operator[2]:
-						
-						aux = solution_particle[swap_operator[0]]
-						solution_particle[swap_operator[0]] = solution_particle[swap_operator[1]]
-						solution_particle[swap_operator[1]] = aux
-				
-				particle.setCurrentSolution(solution_particle)
-				
-				cost_current_solution = self.graph.getCostPath(solution_particle)
-				
-				# updates the cost of the current solution
-				particle.setCostCurrentSolution(cost_current_solution)
-
-				# checar se a solucao atual é a melhor local
-				if cost_current_solution < particle.getCostPBest():
-					particle.setPBest(solution_particle)
-					particle.setCostPBest(cost_current_solution)
-
-			# aplicar the oxc
-			for c in range(int((self.cross_percent*self.size_population)/2)):
-
-				p1 = random.randint(0,self.size_population-1)
-				p2 = random.randint(0,self.size_population-1)
-
-				sol_f1,sol_f2 = self.cycle_cx(self.particles[p1].solution,self.particles[p2].solution)
-
-				f1 = Particle(sol_f1,self.graph.getCostPath(sol_f1))
-				f2 = Particle(sol_f2,self.graph.getCostPath(sol_f2))
-
-				self.particles.append(f1)
-				self.particles.append(f2)
-
-			# Ordenar as particulas pelo fitness
-			self.particles.sort(key=Particle.getCostCurrentSolution)
-
-			# Reset the original size of population
-			self.particles = self.particles[:self.size_population]
+			if(t == 0):
+				self.gbest = min(self.ants, key=attrgetter('pathCost'))
+			else:
+				pbest = min(self.ants, key=attrgetter('pathCost'))
+				if(pbest.pathCost < self.gbest.pathCost):
+					self.gbest = pbest
+			print("GBEST = ",self.gbest.path, ' - ',self.gbest.pathCost)
 
 			
-def main(exec, filename, length):
-	f = open('results/'+filename+'.txt', "a")
-	f.write(f'Execução: ${exec}\n')
+			
+			
+			# for particle in self.particles:
+				
+			# 	particle.clearVelocity()
+			# 	temp_velocity = []
+			# 	solution_gbest = copy.copy(self.gbest.getPBest()) 
+			# 	solution_pbest = particle.getPBest()[:] 
+			# 	solution_particle = particle.getCurrentSolution()[:] 
 
-	# params: qntCidades
-	graph = Graph(amount_vertices=length)
-	graph.loadAssym('../data/assymetric/'+filename, length)
-	pso = PSO(graph, iterations=500, size_population=500,initial_position=3,cross_percent=0.8, beta=0.2, alfa=0.8)
-	pso.run()
-	pso.showsParticles()
-	print('gbest: %s | cost: %d\n' % (pso.getGBest().getPBest(), pso.getGBest().getCostPBest()))
+			# 	# calcula os swaps pra calcular o melhor local
+			# 	for i in range(self.graph.amount_vertices):
+			# 		if solution_particle[i] != solution_pbest[i]:
+						
+			# 			swap_operator = (i, solution_pbest.index(solution_particle[i]), self.alfa)
 
-	f.write(f'gbest: %s | cost: {pso.getGBest().getPBest(), pso.getGBest().getCostPBest()}\n')
-	f.write("\n")
-	f.close()
-	return pso.getGBest().getCostPBest()
+			# 			temp_velocity.append(swap_operator)
+
+			# 			aux = solution_pbest[swap_operator[0]]
+			# 			solution_pbest[swap_operator[0]] = solution_pbest[swap_operator[1]]
+			# 			solution_pbest[swap_operator[1]] = aux
+
+			# 	# calcula os swaps pra calcular o melhor global
+			# 	for i in range(self.graph.amount_vertices):
+			# 		if solution_particle[i] != solution_gbest[i]:
+						
+			# 			swap_operator = (i, solution_gbest.index(solution_particle[i]), self.beta)
+
+			# 			temp_velocity.append(swap_operator)
+
+			# 			aux = solution_gbest[swap_operator[0]]
+			# 			solution_gbest[swap_operator[0]] = solution_gbest[swap_operator[1]]
+			# 			solution_gbest[swap_operator[1]] = aux
+
+				
+			# 	particle.setVelocity(temp_velocity)
+
+			# 	# faz a trocas e gera o a nova solução da particula
+			# 	for swap_operator in temp_velocity:
+			# 		if random.random() <= swap_operator[2]:
+						
+			# 			aux = solution_particle[swap_operator[0]]
+			# 			solution_particle[swap_operator[0]] = solution_particle[swap_operator[1]]
+			# 			solution_particle[swap_operator[1]] = aux
+				
+			# 	particle.setCurrentSolution(solution_particle)
+				
+			# 	cost_current_solution = self.graph.getCostPath(solution_particle)
+				
+			# 	# updates the cost of the current solution
+			# 	particle.setCostCurrentSolution(cost_current_solution)
+
+			# 	# checar se a solucao atual é a melhor local
+			# 	if cost_current_solution < particle.getCostPBest():
+			# 		particle.setPBest(solution_particle)
+			# 		particle.setCostPBest(cost_current_solution)
+
+			# # aplicar the oxc
+			# for c in range(int((self.cross_percent*self.size_population)/2)):
+
+			# 	p1 = random.randint(0,self.size_population-1)
+			# 	p2 = random.randint(0,self.size_population-1)
+
+			# 	sol_f1,sol_f2 = self.cycle_cx(self.particles[p1].solution,self.particles[p2].solution)
+
+			# 	f1 = Ant(sol_f1,self.graph.getCostPath(sol_f1))
+			# 	f2 = Particle(sol_f2,self.graph.getCostPath(sol_f2))
+
+			# 	self.particles.append(f1)
+			# 	self.particles.append(f2)
+
+			# # Ordenar as particulas pelo fitness
+			# self.particles.sort(key=Ant.getCostCurrentSolution)
+
+			# # Reset the original size of population
+			# self.particles = self.particles[:self.size_population]
+
+			
+
+
 		
 
 if __name__ == "__main__":
+	
+	
+	graph = Graph(amount_vertices=5)	
 
-	atsp_name = [
-						# "ft53",
-            # "ftv33",
-            "ftv38",
-            "ftv170",
-            "kro124p",
-            "rbg323",
-            "rbg358",
-            "rbg403",
-            "rbg443"]
-	lengths = [
-						# 53, 34, 
-						39, 171, 100, 323, 358, 403, 443]
+	# graph.loadfri06()
 
-	for i in range(len(atsp_name)):
-		cost = 0
+	graph.addEdge(0,1,3)
+	graph.addEdge(0,2,1)
+	graph.addEdge(0,3,5)
+	graph.addEdge(0,4,4)
 
-		f = open("results/"+atsp_name[i]+'.txt', "a")
-		f.write(f'---------{atsp_name[i]} : {lengths[i]}---------\n\n')
-		f.close()
+	graph.addEdge(1,0,3)
+	graph.addEdge(1,2,4)
+	graph.addEdge(1,3,1)
+	graph.addEdge(1,4,5)
 
-		for j in range(30):
-			cost += main(j+1, atsp_name[i], lengths[i])
+	graph.addEdge(2,0,1)
+	graph.addEdge(2,1,4)
+	graph.addEdge(2,3,5)
+	graph.addEdge(2,4,2)
 
-		f = open("results/"+atsp_name[i]+'.txt', "a")
-		f.write(f'Media custo : {cost/30}\n\n')
-		f.close()
+	graph.addEdge(3,0,5)
+	graph.addEdge(3,1,1)
+	graph.addEdge(3,2,5)
+	graph.addEdge(3,4,5)
+
+	graph.addEdge(4,0,4)
+	graph.addEdge(4,1,5)
+	graph.addEdge(4,2,2)
+	graph.addEdge(4,3,5)
+
+	
+
+	
+
+	
+
+	# graph.buildPheromoneMap()
+	# for (x,y) in graph.edges:
+	# 	print(f' x = {x}  -  y = {y}  -> {graph.edges[(x,y)]}')
+
+	aco = ACO(graph, iterations=20, size_population=2,initial_position=3,cross_percent=0.8, beta=1, alfa=0.9)
+
+	# print()
+	
+	aco.run()
+	aco.graph.showPheromoneMap()
+
+	aco.evaporePheromoneMap(0.20)
+	aco.graph.showPheromoneMap()
+	
+	# pso.showsParticles() 
+
+	# print('gbest: %s | cost: %d\n' % (pso.getGBest().getPBest(), pso.getGBest().getCostPBest()))
