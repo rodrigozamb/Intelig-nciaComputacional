@@ -1,7 +1,8 @@
 from operator import attrgetter, le
 import random, sys, time, copy
+import readData
 
-
+# class that represents a graph
 class Graph:
 
 	def __init__(self, amount_vertices):
@@ -70,6 +71,16 @@ class Graph:
 		for i in range(len(fri26DistanceMatrix)):
 			for j in range(len(fri26DistanceMatrix[i])):
 				self.addEdge(i,j,fri26DistanceMatrix[i][j])
+
+	def loadAssym(self, filename='../data/assymetric/kro124p', length=100):
+		distanceMatrix = readData.readAsymmetric(filename, length)
+		self.edges = {}
+		self.vertices = set() 
+		self.amount_vertices = len(distanceMatrix[0])
+
+		for i in range(len(distanceMatrix)):
+			for j in range(len(distanceMatrix[i])):
+				self.addEdge(i,j,distanceMatrix[i][j])
 
 	def generateComplete(self):
 		for i in range(self.amount_vertices):
@@ -378,27 +389,50 @@ class PSO:
 			self.particles = self.particles[:self.size_population]
 
 			
+def main(exec, filename, length):
+	f = open('results/'+filename+'.txt', "a")
+	f.write(f'Execução: ${exec}\n')
 
+	# params: qntCidades
+	graph = Graph(amount_vertices=length)
+	graph.loadAssym('../data/assymetric/'+filename, length)
+	pso = PSO(graph, iterations=500, size_population=500,initial_position=3,cross_percent=0.8, beta=0.2, alfa=0.8)
+	pso.run()
+	pso.showsParticles()
+	print('gbest: %s | cost: %d\n' % (pso.getGBest().getPBest(), pso.getGBest().getCostPBest()))
 
+	f.write(f'gbest: %s | cost: {pso.getGBest().getPBest(), pso.getGBest().getCostPBest()}\n')
+	f.write("\n")
+	f.close()
+	return pso.getGBest().getCostPBest()
 		
 
 if __name__ == "__main__":
-	
-	
-	graph = Graph(amount_vertices=6)	
 
-	graph.loadfri06()
+	atsp_name = [
+						# "ft53",
+            # "ftv33",
+            "ftv38",
+            "ftv170",
+            "kro124p",
+            "rbg323",
+            "rbg358",
+            "rbg403",
+            "rbg443"]
+	lengths = [
+						# 53, 34, 
+						39, 171, 100, 323, 358, 403, 443]
 
-	# creates a PSO instance
-	pso = PSO(graph, iterations=500, size_population=150,initial_position=3,cross_percent=0.8, beta=1, alfa=0.9)
+	for i in range(len(atsp_name)):
+		cost = 0
 
-	print('População inicial : ')
-	pso.showsParticles()
-	print()
-	pso.run() # runs the PSO algorithm
-	pso.showsParticles() # shows the particles
+		f = open("results/"+atsp_name[i]+'.txt', "a")
+		f.write(f'---------{atsp_name[i]} : {lengths[i]}---------\n\n')
+		f.close()
 
-	pmxFile = open("cicle_results.txt","a")
-	# shows the global best particle
-	print('gbest: %s | cost: %d\n' % (pso.getGBest().getPBest(), pso.getGBest().getCostPBest()))
-	pmxFile.write(str(pso.getGBest().getCostPBest())+" \n")
+		for j in range(30):
+			cost += main(j+1, atsp_name[i], lengths[i])
+
+		f = open("results/"+atsp_name[i]+'.txt', "a")
+		f.write(f'Media custo : {cost/30}\n\n')
+		f.close()
