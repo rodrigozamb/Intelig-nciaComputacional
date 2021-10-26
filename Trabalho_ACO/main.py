@@ -243,21 +243,26 @@ def main(it, name, length):
 
 if __name__ == "__main__":	
 	atsp_name = [
-					"ft53",
+					# "ft53",
 					"ftv33",
-					"ftv38",
-					"ftv170",
+					# "ftv38",
+					# "ftv170",
 					"kro124p",
 					"rbg323",
 					"rbg358",
 					"rbg403",
 					"rbg443"]
-	lengths = [53, 34, 39, 171, 100, 323, 358, 403, 443]
+	lengths = [
+					# 53, 
+					34, 
+					# 39, 
+					# 171, 
+					100, 323, 358, 403, 443]
 
 	for i in range(len(atsp_name)):
 		cost = 0
-		best = 0
-		worst = 10000000
+		best = 10000000
+		worst = 0
 		mean_time = 0
 
 		f = open("results/"+atsp_name[i]+'.txt', "a")
@@ -267,16 +272,27 @@ if __name__ == "__main__":
 		for j in range(30):
 			start_time = time.time()
 			cost += main(j+1, atsp_name[i], lengths[i])
+			final_time = time.time()
 
+			total_time = final_time - start_time
+			mean_time += total_time
+
+			best = worst = cost
 			if(cost < best):
 				best = cost
 			elif(cost > worst):
 				worst = cost
-		
-		final_time = time.time()
-		mean_time += final_time - start_time
 
+			f = open("results/"+atsp_name[i]+'.txt', "a")
+			f.write(f'Execução {j+1}--------------------------------\n\n')
+			f.write(f'Melhor custo : {best}\n\n')
+			f.write(f'Pior custo : {worst}\n\n')
+			f.write(f'Media custo : {cost}\n\n')
+			f.write(f'Tempo : {total_time}\n\n')
+			f.close()
+	
 		f = open("results/"+atsp_name[i]+'.txt', "a")
+		f.write(f'----------------------------------------------')
 		f.write(f'Melhor custo : {best}\n\n')
 		f.write(f'Pior custo : {worst}\n\n')
 		f.write(f'Media custo : {cost/30}\n\n')
