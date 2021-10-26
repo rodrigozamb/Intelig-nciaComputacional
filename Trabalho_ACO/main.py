@@ -5,6 +5,8 @@ import math
 import readData
 import sys
 import time
+from itertools import groupby
+
 class Graph:
 
 	def __init__(self, amount_vertices):
@@ -120,10 +122,10 @@ class Ant:
 
 class ACO:
 
-	def __init__(self, graph, iterations, ants,evaporation,alfa,beta):
+	def __init__(self, graph, iterations, number_ants,evaporation,alfa,beta):
 		self.graph = graph 
 		self.iterations = iterations 
-		self.ants = ants 
+		self.number_ants = number_ants 
 		self.ants = [] 
 		self.gbest = []
 		self.evaporation = evaporation
@@ -185,12 +187,12 @@ class ACO:
 				plt.savefig(name, dpi=dpi)
 		plt.show()
 		plt.gcf().clear()
-
+		
 	def run(self):
 		
 		for t in range(self.iterations):
 			self.ants = []
-			for i in range(self.ants):
+			for i in range(self.number_ants):
 	
 				initial_position = random.randint(0, self.graph.amount_vertices-1)
 				ant = Ant(initial_position)
@@ -226,14 +228,16 @@ class ACO:
 					self.gbest = pbest
 					
 			print("GBEST = ",self.gbest.path, ' - ',self.gbest.pathCost)
-
+			if(all(x==self.ants[0] for x in self.ants)):
+				print('convergiu')
+				return
 		# self.plot()
 				
 def main(it, name, length):
 	graph = Graph(amount_vertices=length)
 	graph.loadAssym('../data/assymetric/'+name, length)
 	
-	aco = ACO(graph, iterations=1000, ants=100,evaporation=0.1,alfa=1,beta=5)
+	aco = ACO(graph, iterations=1000, number_ants=100, evaporation=0.1, alfa=1, beta=5)
 	aco.run()
 	return aco.gbest.pathCost
 
