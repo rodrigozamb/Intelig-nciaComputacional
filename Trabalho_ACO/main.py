@@ -1,8 +1,10 @@
 from operator import attrgetter
 import random
-
-
-
+import matplotlib.pyplot as plt
+import math
+import readData
+import sys
+import time
 class Graph:
 
 	def __init__(self, amount_vertices):
@@ -81,6 +83,15 @@ class Graph:
 					weight = random.randint(1, 10)
 					self.addEdge(i, j, weight)
 
+	def loadAssym(self, filename='../data/assymetric/kro124p', length=100):
+		distanceMatrix = readData.readAsymmetric(filename, length)
+		self.edges = {}
+		self.vertices = set() 
+		self.amount_vertices = len(distanceMatrix[0])
+
+		for i in range(len(distanceMatrix)):
+			for j in range(len(distanceMatrix[i])):
+				self.addEdge(i,j,distanceMatrix[i][j])
 
 class Ant:
 
@@ -107,21 +118,17 @@ class Ant:
 		self.path.append(newPos)
 		self.last_pos = newPos
 
-	
-
-
-
 class ACO:
 
-	def __init__(self, graph, iterations, size_population,initial_position,evaporation):
+	def __init__(self, graph, iterations, ants,evaporation,alfa,beta):
 		self.graph = graph 
 		self.iterations = iterations 
-		self.size_population = size_population 
+		self.ants = ants 
 		self.ants = [] 
 		self.gbest = []
-		self.initial_position = initial_position
 		self.evaporation = evaporation
-
+		self.alfa = alfa
+		self.beta = beta
 
 	def getGBest(self):
 		return self.gbest
@@ -137,77 +144,78 @@ class ACO:
 		x,y,z = elem
 		return z
 
-	def calculate_next_move(self,ant):
+	def calculate_next_move(self, ant):
+		roulette_wheel = 0.0
+		unvisited_nodes = [node for node in range(self.graph.amount_vertices) if node not in ant.path]
+		heuristic_total = 0.0
 
-		last_pos = ant.last_pos
-		possible_nexts = []
-		max_v = 0
-
-		for (x,y) in self.graph.pheromoneMap:
-			if x == last_pos and y not in ant.path :	
-				possible_nexts.append((x,y,self.graph.pheromoneMap[(x,y)]))
-				
-		possible_nexts.sort(key=self.sortAux)
-		
-		for (x,y,z) in possible_nexts:
-			max_v = z
-
-		if(max_v == 0):
-			rand_y = random.randint(0,len(possible_nexts)-1)
-			(x,y,z) =  possible_nexts[rand_y]
-			return y
-
-		pivot = random.random()*max_v
-
-		next_pos = -1
-
-		for (x,y,z) in possible_nexts:
-			if(next_pos == -1):
-				next_pos = y
-			elif( z >= pivot):
-				continue
-			else:
-				next_pos = y
-
-		return next_pos
+		for unvisited_node in unvisited_nodes:
+			heuristic_total += self.graph.edges[(ant.path[-1],unvisited_node)]
+		for unvisited_node in unvisited_nodes:
+			roulette_wheel += pow(self.graph.pheromoneMap[(ant.path[-1],unvisited_node)], self.alfa) * pow((heuristic_total / self.graph.edges[(ant.path[-1],unvisited_node)]), self.beta)
+		random_value = random.uniform(0.0, roulette_wheel)
+		wheel_position = 0.0
+		for unvisited_node in unvisited_nodes:
+			wheel_position += pow(self.graph.pheromoneMap[(ant.path[-1],unvisited_node)], self.alfa) * pow((heuristic_total / self.graph.edges[(ant.path[-1],unvisited_node)]), self.beta)
+			if wheel_position >= random_value:
+				return unvisited_node
 
 	def evaporePheromoneMap(self):
 		for (x,y) in self.graph.pheromoneMap:
 			self.graph.pheromoneMap[(x,y)] = self.graph.pheromoneMap[(x,y)]*(1.0-self.evaporation)
 
+	def insertPheromoneMap(self):
+		for ant in self.ants:
+			for i in range(len(ant.path)-1):
+				self.graph.pheromoneMap[(ant.path[i],ant.path[i+1])] += (1/self.graph.edges[(ant.path[i],ant.path[i+1])])
+
+	def plot(self, line_width=1, point_radius=math.sqrt(2.0), annotation_size=8, dpi=120, save=True, name=None):
+		x = [self.graph[i][0] for i in self.gbest]
+		x.append(x[0])
+		y = [self.graph[i][1] for i in self.gbest]
+		y.append(y[0])
+		plt.plot(x, y, linewidth=line_width)
+		plt.scatter(x, y, s=math.pi * (point_radius ** 2.0))
+		plt.title('ACO')
+		for i in self.gbest:
+				plt.annotate(self.labels[i], self.graph[i], size=annotation_size)
+		if save:
+				if name is None:
+						name = '{0}.png'.format('aco')
+				plt.savefig(name, dpi=dpi)
+		plt.show()
+		plt.gcf().clear()
+
 	def run(self):
 		
-
 		for t in range(self.iterations):
-
-			
-			
 			self.ants = []
-			for i in range(self.size_population):
-			
-				ant = Ant(self.initial_position)
+			for i in range(self.ants):
+	
+				initial_position = random.randint(0, self.graph.amount_vertices-1)
+				ant = Ant(initial_position)
 				self.ants.append(ant)
 			
+			# formigas se movimentam
 			for i in range(self.graph.amount_vertices-1):
 				for ant in self.ants:
 					last_pos = ant.last_pos
-
 					next_pos = self.calculate_next_move(ant)
 
 					ant.path.append(next_pos)
-					ant.pathCost += self.graph.edges[(last_pos,next_pos)]
-					
-
-					self.graph.pheromoneMap[(last_pos,next_pos)] += (1/self.graph.edges[(last_pos,next_pos)])
-					
+					ant.pathCost += self.graph.edges[(last_pos,next_pos)]		
 					ant.last_pos = next_pos
-
-			for ant in self.ants:
-				ant.path.append(self.initial_position)
-				ant.pathCost += self.graph.edges[(ant.last_pos,self.initial_position)]
 
 			# Realiza a evaporação do feromonio
 			self.evaporePheromoneMap()
+
+			# Depositar o feromonio na volta
+			self.insertPheromoneMap()
+
+			# fechando o ciclo
+			for ant in self.ants:
+				ant.path.append(ant.initial_pos)
+				ant.pathCost += self.graph.edges[(ant.last_pos,ant.initial_pos)]
 
 			# atualiza o melhor global 
 			if(t == 0):
@@ -216,46 +224,57 @@ class ACO:
 				pbest = min(self.ants, key=attrgetter('pathCost'))
 				if(pbest.pathCost < self.gbest.pathCost):
 					self.gbest = pbest
+					
 			print("GBEST = ",self.gbest.path, ' - ',self.gbest.pathCost)
 
-
-
-if __name__ == "__main__":
+		# self.plot()
+				
+def main(it, name, length):
+	graph = Graph(amount_vertices=length)
+	graph.loadAssym('../data/assymetric/'+name, length)
 	
-	
-	graph = Graph(amount_vertices=5)	
-
-	# graph.loadfri06()
-
-	graph.addEdge(0,1,3)
-	graph.addEdge(0,2,1)
-	graph.addEdge(0,3,5)
-	graph.addEdge(0,4,4)
-
-	graph.addEdge(1,0,3)
-	graph.addEdge(1,2,4)
-	graph.addEdge(1,3,1)
-	graph.addEdge(1,4,5)
-
-	graph.addEdge(2,0,1)
-	graph.addEdge(2,1,4)
-	graph.addEdge(2,3,5)
-	graph.addEdge(2,4,2)
-
-	graph.addEdge(3,0,5)
-	graph.addEdge(3,1,1)
-	graph.addEdge(3,2,5)
-	graph.addEdge(3,4,5)
-
-	graph.addEdge(4,0,4)
-	graph.addEdge(4,1,5)
-	graph.addEdge(4,2,2)
-	graph.addEdge(4,3,5)
-
-
-	aco = ACO(graph, iterations=20, size_population=2,initial_position=3,evaporation=0.2)
-
-	# print()
-	
+	aco = ACO(graph, iterations=1000, ants=100,evaporation=0.1,alfa=1,beta=5)
 	aco.run()
-	
+	return aco.gbest.pathCost
+
+if __name__ == "__main__":	
+	atsp_name = [
+					"ft53",
+					"ftv33",
+					"ftv38",
+					"ftv170",
+					"kro124p",
+					"rbg323",
+					"rbg358",
+					"rbg403",
+					"rbg443"]
+	lengths = [53, 34, 39, 171, 100, 323, 358, 403, 443]
+
+	for i in range(len(atsp_name)):
+		cost = 0
+		best = 0
+		worst = 10000000
+		mean_time = 0
+
+		f = open("results/"+atsp_name[i]+'.txt', "a")
+		f.write(f'---------{atsp_name[i]} : {lengths[i]}---------\n\n')
+		f.close()
+
+		for j in range(30):
+			start_time = time.time()
+			cost += main(j+1, atsp_name[i], lengths[i])
+
+			if(cost < best):
+				best = cost
+			elif(cost > worst):
+				worst = cost
+		
+		final_time = time.time()
+		mean_time += final_time - start_time
+
+		f = open("results/"+atsp_name[i]+'.txt', "a")
+		f.write(f'Melhor custo : {best}\n\n')
+		f.write(f'Pior custo : {worst}\n\n')
+		f.write(f'Media custo : {cost/30}\n\n')
+		f.write(f'Tempo médio : {mean_time/30}\n\n')
+		f.close()
