@@ -277,7 +277,6 @@ if __name__ == "__main__":
 			total_time = final_time - start_time
 			mean_time += total_time
 
-			best = worst = cost
 			if(cost < best):
 				best = cost
 			elif(cost > worst):
@@ -287,7 +286,6 @@ if __name__ == "__main__":
 			f.write(f'Execução {j+1}--------------------------------\n\n')
 			f.write(f'Melhor custo : {best}\n\n')
 			f.write(f'Pior custo : {worst}\n\n')
-			f.write(f'Media custo : {cost}\n\n')
 			f.write(f'Tempo : {total_time}\n\n')
 			f.close()
 	
