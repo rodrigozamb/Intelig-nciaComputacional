@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from itertools import permutations
 import time
+import readData
 # from fri26Matrix import *
 
 
@@ -25,7 +26,8 @@ class TravelingSalesman:
         for i in range(QntPopulacao):  # pra cada individuo da população
             self.population.append(self.createElement())  # população inicial
 
-        self.createDistanceMatrix()
+        # self.createDistanceMatrix()
+        
         # self.distanceMatrix = fri26DistanceMatrix
 
     # Função que cria a matriz de distancia das cidades
@@ -50,9 +52,9 @@ class TravelingSalesman:
     def createElement(self):
         el = []
         while len(el) < self.numberOfCities:
-            i = random.randint(0, self.numberOfCities-1)
-            if i not in el:
-                el.append(i)
+            city = random.randint(0, self.numberOfCities-1)
+            if city not in el:
+                el.append(city)
         return el
 
     # Função que plota as cidades e o caminho feito
@@ -192,10 +194,10 @@ class TravelingSalesman:
         i = 0
         o1[i] = f1[i]
         i = indx1[f2[i]]
-        while o1[i] == -1:
+        while o1[i] == -1 :
             o1[i] = f1[i]
             i = indx1[f2[i]]
-        for i in range(ind_size):
+        for i in range(ind_size) :
             if o1[i] == -1:
                 o1[i] = f2[i]
 
@@ -212,7 +214,8 @@ class TravelingSalesman:
         f1[:] = o1[:]
         f2[:] = o2[:]
 
-        return f1, f2
+
+        return f1, f2	
 
     def indexOf(self, arr, x):
         for a in range(0, arr.__len__()):
@@ -321,8 +324,8 @@ class TravelingSalesman:
     # Função principal do programa
     def main(self, i):
         atsp_name = [
-            "ft53",
             "ftv33",
+            "ft53",
             "ftv38",
             "ftv170",
             "kro124p",
@@ -331,8 +334,8 @@ class TravelingSalesman:
             # "rbg403","rbg443"
         ]
         lengths = [
-            53,
             34,
+            53,
             39,
             171,
             100,
@@ -426,7 +429,7 @@ class TravelingSalesman:
                 # print("Pais")
                 # print(p1,p2)
                 # escolher os pais para cruzamento (roleta?)
-                f1, f2 = self.CX2(p1, p2)
+                f1, f2 = self.cycle_cx(p1, p2)
                 # f1,f2 = self.normalCross(p1, p2) # escolher os pais para cruzamento (roleta?)
                 # print(p1,p2)
 
@@ -454,11 +457,25 @@ class TravelingSalesman:
             # if(self.handle_conversion()):
             #     break
 
+def loadAssym(filename='../data/assymetric/kro124p', length=100):
+    distanceMatrix = readData.readAsymmetric(filename, length)
+
+    print(distanceMatrix)
+
+    # for i in range(len(distanceMatrix)):
+    #     aux = []
+    #     for j in range(len(distanceMatrix[i])):
+    #         aux.append([i,j])
+    #     distanceMatrix[i] = aux
+
+    # print(distanceMatrix)
+
+    return distanceMatrix
 
 # params: qntCidades, QntPopulacao, epochs, mutprob, crossprob
 atsp_name = [
-    "ft53",
     "ftv33",
+    "ft53",
     "ftv38",
     "ftv170",
     "kro124p",
@@ -467,8 +484,8 @@ atsp_name = [
     # "rbg403","rbg443"
 ]
 lengths = [
-    53,
     34,
+    53,
     39,
     171,
     100,
@@ -483,4 +500,5 @@ for i in range(len(atsp_name)):
     f.close()
 
     ts = TravelingSalesman(lengths[i], 200, 1000, 0.1, 0.8)
+    ts.distanceMatrix = loadAssym('../data/assymetric/'+atsp_name[i], lengths[i])
     ts.main(i)
