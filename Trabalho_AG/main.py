@@ -321,62 +321,6 @@ class TravelingSalesman:
         else:
             return False
 
-    # Função principal do programa
-    def main(self, i):
-        atsp_name = [
-            "ftv33",
-            "ft53",
-            "ftv38",
-            "ftv170",
-            "kro124p",
-            "rbg323",
-            "rbg358",
-            # "rbg403","rbg443"
-        ]
-        lengths = [
-            34,
-            53,
-            39,
-            171,
-            100,
-            323,
-            358,
-            # 403, 443
-        ]
-        cost = 0
-        best = 10000000
-        worst = 0
-        mean_time = 0
-
-        for j in range(10):
-            start_time = time.time()
-            self.simulate()
-            cost = self.evaluateElement(self.population[0])
-            final_time = time.time()
-
-            total_time = final_time - start_time
-            mean_time += total_time
-
-            if(cost < best):
-                best = cost
-            elif(cost > worst):
-                worst = cost
-
-            f = open("results/"+atsp_name[i]+'.txt', "a")
-            f.write(f'Execução {j+1}--------------------------------\n\n')
-            f.write(f'Melhor custo : {best}\n\n')
-            f.write(f'Pior custo : {worst}\n\n')
-            f.write(f'Tempo : {total_time}\n\n')
-            f.close()
-
-        f = open("results/"+atsp_name[i]+'.txt', "a")
-        f.write(f'----------------------------------------------\n')
-        f.write(f'Melhor custo : {best}\n\n')
-        f.write(f'Pior custo : {worst}\n\n')
-        f.write(f'Media custo : {self.calculateMedia()}\n\n')
-        f.write(f'Tempo médio : {mean_time/10}\n\n')
-        f.close()
-
     def calculateMedia(self):
         s = 0.0
         for i in self.population:
@@ -438,6 +382,8 @@ class TravelingSalesman:
 
                 filhos.append(f1)
                 filhos.append(f2)
+                
+            print('chega aqui')
 
             for f in filhos:
                 self.population.append(f)
@@ -472,33 +418,70 @@ def loadAssym(filename='../data/assymetric/kro124p', length=100):
 
     return distanceMatrix
 
-# params: qntCidades, QntPopulacao, epochs, mutprob, crossprob
-atsp_name = [
-    "ftv33",
-    "ft53",
-    "ftv38",
-    "ftv170",
-    "kro124p",
-    "rbg323",
-    "rbg358",
-    # "rbg403","rbg443"
-]
-lengths = [
-    34,
-    53,
-    39,
-    171,
-    100,
-    323,
-    358,
-    # 403, 443
-]
+# Função principal do programa
+def main():
+    atsp_name = [
+        # "ftv33",
+        "ft53",
+        "ftv38",
+        "ftv170",
+        "kro124p",
+        "rbg323",
+        "rbg358",
+        # "rbg403","rbg443"
+    ]
+    lengths = [
+        # 34,
+        53,
+        39,
+        171,
+        100,
+        323,
+        358,
+        # 403, 443
+    ]
 
-for i in range(len(atsp_name)):
-    f = open("results/"+atsp_name[i]+'.txt', "a")
-    f.write(f'---------{atsp_name[i]} : {lengths[i]}---------\n\n')
-    f.close()
+    for i in range(len(atsp_name)):
+        f = open("results/"+atsp_name[i]+'.txt', "a")
+        f.write(f'---------{atsp_name[i]} : {lengths[i]}---------\n\n')
+        f.close()
 
-    ts = TravelingSalesman(lengths[i], 200, 1000, 0.1, 0.8)
-    ts.distanceMatrix = loadAssym('../data/assymetric/'+atsp_name[i], lengths[i])
-    ts.main(i)
+        cost = 0
+        best = 10000000
+        worst = 0
+        mean_time = 0
+
+        for j in range(10):
+            ts = TravelingSalesman(lengths[i], 200, 1000, 0.1, 0.8)
+            ts.distanceMatrix = loadAssym('../data/assymetric/'+atsp_name[i], lengths[i])
+
+            start_time = time.time()
+            ts.simulate()
+            cost = ts.evaluateElement(ts.population[0])
+            final_time = time.time()
+
+            total_time = final_time - start_time
+            mean_time += total_time
+
+            if(cost < best):
+                best = cost
+            elif(cost > worst):
+                worst = cost
+
+            f = open("results/"+atsp_name[i]+'.txt', "a")
+            f.write(f'Execução {j+1}--------------------------------\n\n')
+            f.write(f'Melhor custo : {best}\n\n')
+            f.write(f'Pior custo : {worst}\n\n')
+            f.write(f'Tempo : {total_time}\n\n')
+            f.close()
+    
+
+        f = open("results/"+atsp_name[i]+'.txt', "a")
+        f.write(f'----------------------------------------------\n')
+        f.write(f'Melhor custo : {best}\n\n')
+        f.write(f'Pior custo : {worst}\n\n')
+        f.write(f'Media custo : {ts.calculateMedia()}\n\n')
+        f.write(f'Tempo médio : {mean_time/10}\n\n')
+        f.close()
+
+main()
