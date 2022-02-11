@@ -1,29 +1,20 @@
 import numpy as np
 
-tsp_name = ["dantzig42",
-            "fri26",
-            "gr21"]
-
 atsp_name = [
-            "ftv33",
-            "ft53",
-            "ftv38",
+            # "ftv33",
+            # "ft53",
+            # "ftv38",
             "ftv170",
-            "kro124p",
-            "rbg323",
-            "rbg358",
-            # "rbg453",
-            # "rbg443"
+            # "kro124p",
+            # "rbg323","rbg358", "rbg453","rbg443"
             ]
 lengths = [
-          34, 
-          53, 
-          38, 
+          # 34, 
+      #     53, 
+          # 38, 
           171, 
-          100, 
-          323, 
-          358, 
-          # 403, 443
+          # 100, 
+      #     323,358,403, 443
           ]
 
 def readAsymmetric(filename, length):

@@ -243,21 +243,25 @@ def main(it, name, length):
 
 if __name__ == "__main__":	
 	atsp_name = [
-					# "ft53",
+					"ft53",
 					"ftv33",
-					# "ftv38",
-					# "ftv170",
+					"ftv38",
+					"ftv170",
 					"kro124p",
 					"rbg323",
 					"rbg358",
-					"rbg403",
-					"rbg443"]
+					# "rbg403","rbg443"
+					]
 	lengths = [
-					# 53, 
+					53, 
 					34, 
-					# 39, 
-					# 171, 
-					100, 323, 358, 403, 443]
+					39, 
+					171, 
+					100, 
+					323, 
+					358, 
+					# 403, 443
+					]
 
 	for i in range(len(atsp_name)):
 		cost = 0

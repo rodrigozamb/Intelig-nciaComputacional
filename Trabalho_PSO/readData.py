@@ -29,19 +29,7 @@ def readAsymmetric(filename, length):
   full_matrix = full_matrix.tolist()
 
   return full_matrix
-        
-
-  # coords = data.split("DISPLAY_DATA_SECTION")[1].split("DISPLAY_DATA_SECTION_END")[0].strip().split('\n')
-  # cities = [item.strip().split() for item in coords]
-  # cities = [list(map(float, i)) for i in cities]
 
 if __name__ == '__main__':
-  # for i in tsp_name:
-  #   print(i)
-  # #   run_file('data/symmetric/'+i)
-
-  # for i in atsp_name:
-  #   print(i)
-  #   readAsymmetric('data/assymetric/'+i)
 
   print(readAsymmetric('../data/assymetric/ftv170', 171))
